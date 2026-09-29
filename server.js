@@ -32,19 +32,33 @@ const PIXABAY_KEY = process.env.PIXABAY_KEY || '';
 const UNSPLASH_KEY = process.env.UNSPLASH_KEY || '';
 const FOTOS_ON = !!(PEXELS_KEY || PIXABAY_KEY || UNSPLASH_KEY);
 const getJSON = async (url, headers = {}) => { const r = await fetch(url, { headers }); if (!r.ok) throw new Error(url.split('?')[0] + ' ' + r.status); return r.json(); };
+// nota de aderência: palavras da busca presentes na descrição da foto + presença de pessoa adulta
+const PESSOA = /\b(man|woman|men|women|person|people|businessman|businesswoman|entrepreneur|owner|worker|employee|adult|guy|lady|receptionist|seller|customer)\b/i;
+const EVITAR = /\b(child|children|kid|kids|baby|toddler|girl|boy|toy|cartoon|illustration|3d|render|sale|dog|cat|pet)\b/i;
+function ranquear(lista, q) {
+  const termos = q.toLowerCase().split(/[^a-z]+/).filter(t => t.length > 2 && !['with','the','and','for','looking','small','many'].includes(t));
+  return lista.map((p, i) => {
+    const d = (p.desc || '').toLowerCase();
+    let n = termos.reduce((a, t) => a + (d.includes(t) ? 2 : 0), 0);
+    if (PESSOA.test(d)) n += 3;
+    if (EVITAR.test(d)) n -= 6;
+    return { ...p, nota: n - i * 0.05 };
+  }).filter(p => p.nota > 0).sort((a, b) => b.nota - a.nota);
+}
+
 // consulta todos os bancos com chave e intercala os resultados; se um falhar, os outros cobrem
 async function buscarFotos(q) {
   const e = encodeURIComponent(q);
   const fontes = [];
   if (PEXELS_KEY) fontes.push(getJSON(`https://api.pexels.com/v1/search?query=${e}&orientation=portrait&size=large&per_page=15`, { Authorization: PEXELS_KEY })
-    .then(j => (j.photos || []).map(p => ({ id: 'px' + p.id, src: p.src.large2x || p.src.large, pagina: p.url, autor: p.photographer, banco: 'Pexels' }))));
-  if (PIXABAY_KEY) fontes.push(getJSON(`https://pixabay.com/api/?key=${PIXABAY_KEY}&q=${e}&image_type=photo&orientation=vertical&safesearch=true&per_page=20`)
-    .then(j => (j.hits || []).map(p => ({ id: 'pb' + p.id, src: p.largeImageURL, pagina: p.pageURL, autor: p.user, banco: 'Pixabay' }))));
+    .then(j => (j.photos || []).map(p => ({ id: 'px' + p.id, src: p.src.large2x || p.src.large, pagina: p.url, autor: p.photographer, banco: 'Pexels', desc: p.alt || '' }))));
+  if (PIXABAY_KEY) fontes.push(getJSON(`https://pixabay.com/api/?key=${PIXABAY_KEY}&q=${e}&image_type=photo&orientation=vertical&safesearch=true&per_page=40`)
+    .then(j => (j.hits || []).map(p => ({ id: 'pb' + p.id, src: p.largeImageURL, pagina: p.pageURL, autor: p.user, banco: 'Pixabay', desc: p.tags || '' }))));
   if (UNSPLASH_KEY) fontes.push(getJSON(`https://api.unsplash.com/search/photos?query=${e}&orientation=portrait&per_page=15&content_filter=high`, { Authorization: 'Client-ID ' + UNSPLASH_KEY })
-    .then(j => (j.results || []).map(p => ({ id: 'us' + p.id, src: p.urls.regular, pagina: p.links.html, autor: p.user && p.user.name, dl: p.links.download_location, banco: 'Unsplash' }))));
+    .then(j => (j.results || []).map(p => ({ id: 'us' + p.id, src: p.urls.regular, pagina: p.links.html, autor: p.user && p.user.name, dl: p.links.download_location, banco: 'Unsplash', desc: (p.alt_description || '') + ' ' + (p.description || '') }))));
   const listas = (await Promise.allSettled(fontes)).map(r => {
     if (r.status === 'rejected') { console.error('foto:', r.reason && r.reason.message); return []; }
-    return r.value.slice(0, 6); // só os mais relevantes de cada banco
+    return ranquear(r.value, q).slice(0, 4); // só os mais aderentes de cada banco
   });
   const mix = [];
   for (let i = 0; i < 6; i++) for (const l of listas) if (l[i]) mix.push(l[i]);
@@ -59,7 +73,7 @@ async function resolverFotos(slides) {
     try {
       const fotos = (await buscarFotos(String(s.foto_busca).slice(0, 100))).filter(p => p.src && !usadas.has(p.id));
       if (!fotos.length) continue;
-      const p = fotos[Math.floor(Math.random() * Math.min(6, fotos.length))];
+      const p = fotos[Math.floor(Math.random() * Math.min(2, fotos.length))];
       usadas.add(p.id);
       s.foto = p.src;
       if (p.dl) fetch(p.dl, { headers: { Authorization: 'Client-ID ' + UNSPLASH_KEY } }).catch(() => {});
