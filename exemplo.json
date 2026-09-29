@@ -1,0 +1,11 @@
+{
+  "brand": "petroo",
+  "jobId": "teste-petroo",
+  "slides": [
+    { "layout": "capa", "arte": "R$", "titulo": "Antes de\nautomatizar,\nentenda onde", "destaque": "você perde\ndinheiro." },
+    { "layout": "destaque", "tag": "2026", "titulo": "A IA precisa", "destaque": "provar resultado.", "texto": "Cliente não compra ferramenta nova. Compra **tempo economizado**, **paciente atendido**, **mesa ocupada**. Sem número, não fecha." },
+    { "layout": "padrao", "tag": "Clínica", "numero": "01", "titulo": "Onde o tempo", "destaque": "escorre.", "texto": "Recepção respondendo a mesma pergunta no WhatsApp o dia inteiro. Falta de confirmação vira **cadeira vazia na agenda**." },
+    { "layout": "passos", "titulo": "Diagnóstico primeiro.", "destaque": "Automação depois.", "passos": [ { "titulo": "Mapear", "texto": "tempo · cliente · venda" }, { "titulo": "Priorizar", "texto": "o que mais custa" }, { "titulo": "Automatizar", "texto": "só o que dá retorno" } ], "texto": "É o começo do **Método Visão 360 IA**." },
+    { "layout": "cta", "titulo": "Resultado\nantes de", "destaque": "ferramenta.", "texto": "Se você não sabe onde perde dinheiro, nenhuma IA resolve. **Comece pelo diagnóstico.**", "ctas": [ { "titulo": "Salve", "texto": "para rever com a equipe" }, { "titulo": "Chame no direct", "texto": "e olhamos o seu caso" } ] }
+  ]
+}
