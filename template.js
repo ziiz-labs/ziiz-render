@@ -17,6 +17,7 @@ const esc = (s = '') => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').r
 // **negrito** vira destaque de cor; quebras de linha viram <br>
 const rich = (s = '') => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
 const lines = (s = '') => esc(s).split('\n').join('<br>');
+const rgba = (hex, a) => { const h = hex.replace('#', ''); const v = h.length === 3 ? h.split('').map(c => c + c).join('') : h; return `rgba(${parseInt(v.slice(0, 2), 16)},${parseInt(v.slice(2, 4), 16)},${parseInt(v.slice(4, 6), 16)},${a})`; };
 
 function logoHTML(brand, onAccent) {
   if (brand.logoUrl) return `<img class="logoimg" src="${esc(brand.logoUrl)}">`;
@@ -44,12 +45,22 @@ function foot(brand, s, i, n, onAccent) {
   return `<div class="foot">${logoHTML(brand, onAccent)}${right}</div>`;
 }
 
+function photoHTML(s) {
+  const pos = /^[a-z0-9 %.-]{1,30}$/i.test(s.fotoPos || '') ? s.fotoPos : 'center 30%';
+  return `<div class="photo" style="background-image:linear-gradient(to bottom,var(--fade)),url('${esc(s.foto).replace(/'/g, '%27')}');background-position:center,${pos}"></div>`;
+}
+
 function slideHTML(brand, s, i, n) {
-  const accentBg = s.layout === 'destaque' || s.layout === 'passos';
-  const cls = accentBg ? 'slide acc' : 'slide';
+  const foto = s.foto && /^(https?:|data:image\/)/.test(s.foto) && ['capa', 'padrao', 'destaque'].includes(s.layout);
+  const accentBg = !foto && (s.layout === 'destaque' || s.layout === 'passos');
+  const cls = (accentBg ? 'slide acc' : 'slide') + (foto ? ' hasfoto' + (s.layout === 'capa' ? ' fcapa' : ' fint') : '');
   const tag = s.tag ? `<div class="tag">${esc(s.tag)}</div>` : '';
   let body = '';
-  if (s.layout === 'capa') {
+  if (foto && s.layout === 'capa') {
+    body = `${photoHTML(s)}<div class="stack bottom">${tag}${title(s, 'h-xl')}${s.texto ? `<p style="margin-top:24px">${rich(s.texto)}</p>` : ''}</div>`;
+  } else if (foto) {
+    body = `${photoHTML(s)}<div class="stack ftop">${tag}${title(s, 'h-m')}</div>${s.texto ? `<div class="stack low"><p>${rich(s.texto)}</p></div>` : ''}`;
+  } else if (s.layout === 'capa') {
     const art = s.arte ? `<svg class="art" style="right:20px;top:130px" width="560" height="440" viewBox="0 0 620 520">
       <text x="600" y="430" text-anchor="end" font-family="Anton" font-size="440" fill="none" stroke="${brand.colors.accent}" stroke-width="6">${esc(s.arte)}</text>
       ${s.riscar !== false ? `<line x1="10" y1="470" x2="600" y2="60" stroke="${brand.colors.accent}" stroke-width="26" stroke-linecap="round"/>` : ''}</svg>` : '';
@@ -98,7 +109,13 @@ p{font-size:38px;line-height:1.38;max-width:880px}p b{font-weight:800;color:${ac
 .swipe{font:800 26px Inter;letter-spacing:.08em;text-transform:uppercase;color:${accent};display:flex;align-items:center;gap:14px}.acc .swipe{color:${bg}}
 .logo{display:flex;align-items:center;gap:14px}.word{font-family:Nunito;font-weight:800;font-size:46px;line-height:.9}.by{display:block;font-size:17px;text-align:right;margin-top:2px}
 .logoimg{height:66px}
-.art{position:absolute}`;
+.art{position:absolute}
+.h-m{font-size:80px}
+.photo{position:absolute;left:0;right:0;top:0;background-size:cover}
+.slide{--fade:${rgba(bg, .7)} 0%,${rgba(bg, 0)} 16%,${rgba(bg, 0)} 42%,${rgba(bg, .75)} 70%,${bg} 90%,${bg} 100%}
+.fcapa .photo{height:900px}.fint .photo{height:620px}
+.ftop{top:560px}.fint .low{bottom:200px}
+.hasfoto .num,.hasfoto .bar{z-index:2}.hasfoto .stack,.hasfoto .foot{z-index:2}`;
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><style>${css}</style></head><body>${slides.map((s, i) => slideHTML(brand, s, i, n)).join('')}</body></html>`;
 }
 

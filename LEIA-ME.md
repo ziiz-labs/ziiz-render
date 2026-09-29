@@ -17,3 +17,9 @@ Arquivo `brand-<nome>.json` na raiz (nome, byline, handle, cores). Para cliente 
 
 ## Layouts
 capa · padrao · destaque · passos · cta  (campos em exemplo.json). No texto, **assim** destaca e \n quebra linha.
+
+## Fotos reais (opcional)
+
+Em `capa`, `padrao` ou `destaque`, envie `"foto_busca": "termo em inglês"` (ex.: `"worried shop owner looking at phone"`) e o serviço busca uma foto real no banco Pexels (uso comercial liberado). A foto entra no topo do slide com degradê para a cor de fundo; o título fica abaixo. Também dá para mandar a foto pronta em `"foto": "https://..."` e ajustar o enquadramento com `"fotoPos": "center 20%"`.
+
+Para ligar: crie uma chave grátis em pexels.com/api e coloque na variável `PEXELS_KEY` do app no Coolify. Sem a chave, os slides saem sem foto (nada quebra). O `/health` mostra `"fotos": true` quando está ativo.
