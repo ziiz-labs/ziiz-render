@@ -22,27 +22,43 @@ app.use('/files', express.static(OUT_DIR, { maxAge: '7d' }));
 let browserPromise = null;
 const getBrowser = () => (browserPromise ||= chromium.launch({ args: ['--no-sandbox'] }));
 
-app.get('/health', (_req, res) => res.json({ ok: true, fotos: !!PEXELS_KEY }));
+app.get('/health', (_req, res) => res.json({ ok: true, fotos: FOTOS_ON }));
 
-// Fotos reais: slides com "foto_busca" (termo em inglês) recebem uma foto do banco Pexels
-// (uso comercial liberado). Sem PEXELS_KEY ou sem resultado, o slide sai sem foto.
+// Fotos reais: slides com "foto_busca" (termo em inglês) recebem uma foto de banco de imagens
+// com uso comercial liberado. Usa o primeiro provedor com chave: PEXELS_KEY, PIXABAY_KEY ou UNSPLASH_KEY.
+// Sem chave ou sem resultado, o slide sai sem foto (nada quebra).
 const PEXELS_KEY = process.env.PEXELS_KEY || '';
+const PIXABAY_KEY = process.env.PIXABAY_KEY || '';
+const UNSPLASH_KEY = process.env.UNSPLASH_KEY || '';
+const FOTOS_ON = !!(PEXELS_KEY || PIXABAY_KEY || UNSPLASH_KEY);
+const getJSON = async (url, headers = {}) => { const r = await fetch(url, { headers }); if (!r.ok) throw new Error(url.split('?')[0] + ' ' + r.status); return r.json(); };
+async function buscarFotos(q) {
+  const e = encodeURIComponent(q);
+  if (PEXELS_KEY) {
+    const j = await getJSON(`https://api.pexels.com/v1/search?query=${e}&orientation=portrait&size=large&per_page=15`, { Authorization: PEXELS_KEY });
+    return (j.photos || []).map(p => ({ id: 'px' + p.id, src: p.src.large2x || p.src.large, pagina: p.url, autor: p.photographer }));
+  }
+  if (PIXABAY_KEY) {
+    const j = await getJSON(`https://pixabay.com/api/?key=${PIXABAY_KEY}&q=${e}&image_type=photo&orientation=vertical&safesearch=true&per_page=20`);
+    return (j.hits || []).map(p => ({ id: 'pb' + p.id, src: p.largeImageURL, pagina: p.pageURL, autor: p.user }));
+  }
+  const j = await getJSON(`https://api.unsplash.com/search/photos?query=${e}&orientation=portrait&per_page=15&content_filter=high`, { Authorization: 'Client-ID ' + UNSPLASH_KEY });
+  return (j.results || []).map(p => ({ id: 'us' + p.id, src: p.urls.regular, pagina: p.links.html, autor: p.user && p.user.name, dl: p.links.download_location }));
+}
 async function resolverFotos(slides) {
   const creditos = [];
-  if (!PEXELS_KEY) return creditos;
+  if (!FOTOS_ON) return creditos;
   const usadas = new Set();
   for (const s of slides) {
     if (s.foto || !s.foto_busca) continue;
     try {
-      const q = encodeURIComponent(String(s.foto_busca).slice(0, 100));
-      const r = await fetch(`https://api.pexels.com/v1/search?query=${q}&orientation=portrait&size=large&per_page=15`, { headers: { Authorization: PEXELS_KEY } });
-      if (!r.ok) throw new Error('Pexels ' + r.status);
-      const fotos = ((await r.json()).photos || []).filter(p => !usadas.has(p.id));
+      const fotos = (await buscarFotos(String(s.foto_busca).slice(0, 100))).filter(p => p.src && !usadas.has(p.id));
       if (!fotos.length) continue;
       const p = fotos[Math.floor(Math.random() * Math.min(5, fotos.length))];
       usadas.add(p.id);
-      s.foto = p.src.large2x || p.src.large || p.src.original;
-      creditos.push({ busca: s.foto_busca, foto: p.url, autor: p.photographer });
+      s.foto = p.src;
+      if (p.dl) fetch(p.dl, { headers: { Authorization: 'Client-ID ' + UNSPLASH_KEY } }).catch(() => {});
+      creditos.push({ busca: s.foto_busca, foto: p.pagina, autor: p.autor });
     } catch (e) { console.error('foto:', e.message); }
   }
   return creditos;

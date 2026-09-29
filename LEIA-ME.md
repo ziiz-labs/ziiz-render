@@ -20,6 +20,6 @@ capa · padrao · destaque · passos · cta  (campos em exemplo.json). No texto,
 
 ## Fotos reais (opcional)
 
-Em `capa`, `padrao` ou `destaque`, envie `"foto_busca": "termo em inglês"` (ex.: `"worried shop owner looking at phone"`) e o serviço busca uma foto real no banco Pexels (uso comercial liberado). A foto entra no topo do slide com degradê para a cor de fundo; o título fica abaixo. Também dá para mandar a foto pronta em `"foto": "https://..."` e ajustar o enquadramento com `"fotoPos": "center 20%"`.
+Em `capa`, `padrao` ou `destaque`, envie `"foto_busca": "termo em inglês"` (ex.: `"worried shop owner looking at phone"`) e o serviço busca uma foto real em banco de imagens (Pixabay, Pexels ou Unsplash; uso comercial liberado). A foto entra no topo do slide com degradê para a cor de fundo; o título fica abaixo. Também dá para mandar a foto pronta em `"foto": "https://..."` e ajustar o enquadramento com `"fotoPos": "center 20%"`.
 
-Para ligar: crie uma chave grátis em pexels.com/api e coloque na variável `PEXELS_KEY` do app no Coolify. Sem a chave, os slides saem sem foto (nada quebra). O `/health` mostra `"fotos": true` quando está ativo.
+Para ligar: crie uma chave grátis e coloque no app no Coolify, em uma destas variáveis: `PIXABAY_KEY` (pixabay.com/api/docs), `PEXELS_KEY` (pexels.com/api) ou `UNSPLASH_KEY` (unsplash.com/developers, a Access Key). Sem a chave, os slides saem sem foto (nada quebra). O `/health` mostra `"fotos": true` quando está ativo.
