@@ -29,7 +29,7 @@ app.get('/health', (_req, res) => res.json({ ok: true, fotos: FOTOS_ON }));
 // Sem chave ou sem resultado, o slide sai sem foto (nada quebra).
 const PEXELS_KEY = process.env.PEXELS_KEY || '';
 const PIXABAY_KEY = process.env.PIXABAY_KEY || '';
-const UNSPLASH_KEY = process.env.UNSPLASH_KEY || '';
+const UNSPLASH_KEY = process.env.UNSPLASH_KEY || process.env.UNPLASH_KEY || '';
 const FOTOS_ON = !!(PEXELS_KEY || PIXABAY_KEY || UNSPLASH_KEY);
 const getJSON = async (url, headers = {}) => { const r = await fetch(url, { headers }); if (!r.ok) throw new Error(url.split('?')[0] + ' ' + r.status); return r.json(); };
 // nota de aderência: palavras da busca presentes na descrição da foto + presença de pessoa adulta
