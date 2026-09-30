@@ -35,12 +35,17 @@ const getJSON = async (url, headers = {}) => { const r = await fetch(url, { head
 // nota de aderência: palavras da busca presentes na descrição da foto + presença de pessoa adulta
 const PESSOA = /\b(man|woman|men|women|person|people|businessman|businesswoman|entrepreneur|owner|worker|employee|adult|guy|lady|receptionist|seller|customer)\b/i;
 const EVITAR = /\b(child|children|kid|kids|baby|toddler|girl|boy|toy|cartoon|illustration|3d|render|sale|dog|cat|pet)\b/i;
+const NEG = /\b(worried|worry|stress|stressed|frustrated|frustration|sad|tired|angry|confused|anxious|overwhelmed|upset|problem|pensive|thinking|serious)\b/i;
+const POS = /\b(smiling|smile|happy|happiness|confident|joy|joyful|laughing|laugh|cheerful|success|excited)\b/i;
 function ranquear(lista, q) {
   const termos = q.toLowerCase().split(/[^a-z]+/).filter(t => t.length > 2 && !['with','the','and','for','looking','small','many'].includes(t));
   return lista.map((p, i) => {
     const d = (p.desc || '').toLowerCase();
     let n = termos.reduce((a, t) => a + (d.includes(t) ? 2 : 0), 0);
     if (PESSOA.test(d)) n += 3;
+    // emoção pedida pesa mais; emoção oposta derruba a nota
+    if (NEG.test(q) && NEG.test(d)) n += 4; if (NEG.test(q) && POS.test(d)) n -= 4;
+    if (POS.test(q) && POS.test(d)) n += 4; if (POS.test(q) && NEG.test(d)) n -= 4;
     if (EVITAR.test(d)) n -= 6;
     return { ...p, nota: n - i * 0.05 };
   }).filter(p => p.nota > 0).sort((a, b) => b.nota - a.nota);

@@ -73,7 +73,8 @@ function slideHTML(brand, s, i, n) {
       .slice(0, 2).map((c, k) => `<div class="ctab ${k === 1 ? 'fill' : ''}"><div class="ct">${esc(c.titulo)}</div><div class="cd">${esc(c.texto)}</div></div>`).join('');
     body = `<div class="stack top">${tag}${title(s, 'h-xl')}</div><div class="stack mid"><p>${rich(s.texto || '')}</p></div><div class="stack ctas">${ctas}</div>`;
   } else {
-    const big = s.numero ? `<div class="bignum">${esc(s.numero)}</div>` : '';
+    const longo = String(s.titulo || '').length + String(s.destaque || '').length > 40;
+    const big = s.numero && !longo ? `<div class="bignum">${esc(s.numero)}</div>` : '';
     body = `${big}<div class="stack top">${tag}${title(s)}</div>${s.texto ? `<div class="stack low"><p>${rich(s.texto)}</p></div>` : ''}`;
   }
   return `<section class="${cls}" id="s${i + 1}">${head(i, n)}${body}${foot(brand, s, i, n, accentBg)}</section>`;
