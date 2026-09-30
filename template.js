@@ -47,7 +47,7 @@ function foot(brand, s, i, n, onAccent) {
 
 function photoHTML(s) {
   const pos = /^[a-z0-9 %.-]{1,30}$/i.test(s.fotoPos || '') ? s.fotoPos : (s.layout === 'capa' ? 'center 25%' : 'center 12%');
-  return `<div class="photo"><div class="photo-img" style="background-image:url('${esc(s.foto).replace(/'/g, '%27')}');background-position:${pos}"></div><div class="photo-fade"></div></div>`;
+  return `<div class="photo"><div class="photo-img${s.fotoNatural ? ' nat' : ''}" style="background-image:url('${esc(s.foto).replace(/'/g, '%27')}');background-position:${pos}"></div><div class="photo-fade"></div></div>`;
 }
 
 function slideHTML(brand, s, i, n) {
@@ -112,7 +112,7 @@ p{font-size:38px;line-height:1.38;max-width:880px}p b{font-weight:800;color:${ac
 .logoimg{height:66px}
 .art{position:absolute}
 .h-m{font-size:80px}
-.photo{position:absolute;left:0;right:0;top:0}.photo-img,.photo-fade{position:absolute;inset:0}.photo-img{background-size:cover;filter:grayscale(.35) brightness(.82) contrast(1.12)}.photo-fade{background:linear-gradient(to bottom,var(--fade))}
+.photo{position:absolute;left:0;right:0;top:0}.photo-img,.photo-fade{position:absolute;inset:0}.photo-img{background-size:cover;filter:grayscale(.35) brightness(.82) contrast(1.12)}.photo-fade{background:linear-gradient(to bottom,var(--fade))}.photo-img.nat{filter:none}
 .slide{--fade:${rgba(bg, .7)} 0%,${rgba(bg, 0)} 16%,${rgba(bg, 0)} 42%,${rgba(bg, .75)} 70%,${bg} 90%,${bg} 100%}
 .fcapa .photo{height:900px}.fint .photo{height:620px}
 .ftop{top:560px}.fint .low{bottom:200px}
